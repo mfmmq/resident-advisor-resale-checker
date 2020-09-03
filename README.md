@@ -13,7 +13,6 @@ Will prompt you on:
 
 * which URL to check
 * how often to check it (don't DDoS RA, please.)
-* which type of tickets to look out for
 
 ... and theeen 🎉
 

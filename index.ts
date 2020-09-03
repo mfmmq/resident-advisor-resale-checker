@@ -8,7 +8,7 @@ const questions = [
     type: 'input',
     name: 'url',
     message: 'URL to check:',
-    default: () => 'https://www.residentadvisor.net/events/1072201',
+    default: () => 'https://www.residentadvisor.net/events/1422121',
   },
   {
     type: 'input',
@@ -23,25 +23,25 @@ function wait(ms) {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
 
-async function check(url: string, ids: string[], interval: number) {
+async function check(url: string, interval: number) {
   try {
     console.time('fetched page in');
     const body = await request(url);
     console.timeEnd('fetched page in');
 
     const $ = cheerio.load(body);
-    for (const id of ids) {
-      const isAvailable = $(`[id='${id}']`).hasClass('onsale');
-
-      if (isAvailable) {
+    const $li = $('li', '#tickets ul');
+    $li.each((index, element) => {
+      const $el = $(element);
+      if ($el.hasClass('onsale')) {
         notify({
           title: 'TICKETS AVAILABLE!',
-          message: id,
+          message: 'buy tickets now',
         });
 
-        console.log(`${id} Tickets available! GO GO GO 👉  ${url}`);
+        console.log(`Tickets available! GO GO GO 👉  ${url}`);
       }
-    }
+    });
   } catch (err) {
     console.log(err);
     notify({
@@ -52,7 +52,7 @@ async function check(url: string, ids: string[], interval: number) {
 
   await wait(interval);
 
-  check(url, ids, interval);
+  check(url, interval);
 }
 
 async function main() {
@@ -62,36 +62,17 @@ async function main() {
   const body = await request(url);
 
   const $ = cheerio.load(body);
-  const $li = $('#tickets ul li');
-
-  const choices: ChoiceType[] = [];
-  $li.each((index, element) => {
-    const $el = $(element);
-    choices.push({
-      value: $el.attr('id'),
-      name: $el.text(),
-    });
-  });
-
-  const { selected } = (await prompt([
-    {
-      type: 'checkbox',
-      message: 'What tickets should we look out for?',
-      name: 'selected',
-      choices,
-    },
-  ])) as { selected: [string] };
 
   notify({
     title: 'Starting crawler...',
-    message: `Watching: ${selected.join(', ')}`,
+    message: `Watching tickets now`,
   });
 
   console.log(`Started crawling, will check site every ${interval} seconds.`);
   console.log(
     "You should see a notification now. If you don't, something is wrong 😿.",
   );
-  await check(url, selected, parseInt(interval) * 1000);
+  await check(url, parseInt(interval) * 1000);
 }
 
 main();
